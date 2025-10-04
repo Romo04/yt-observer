@@ -106,6 +106,12 @@ void handle_user(int user_fd, ServerState *state)
 {
     char buf[BUF_SIZE];
 
+    printf("New user connected: fd %d\n", user_fd);
+
+    const char *welcome_msg = "Welcome to youtube, type subscribe to subscribe to the only channel there is :D\n";
+
+    send(user_fd, welcome_msg, strlen(welcome_msg), 0);
+
     while (1)
     {
         int n = recv(user_fd, buf, BUF_SIZE-1, 0);
@@ -119,6 +125,8 @@ void handle_user(int user_fd, ServerState *state)
 
         if (strncmp(buf, "subscribe", 9) == 0)
         {
+            printf("You got a new subscriber!\n User: fd %d\n", user_fd);
+
             pthread_mutex_lock(&state->sub_lock);
 
             if (state->sub_count < MAX_CLIENTS)
@@ -131,6 +139,8 @@ void handle_user(int user_fd, ServerState *state)
         }
         else if (strncmp(buf, "unsubscribe", 11) == 0)
         {
+            printf("You lost a subscriber :(\n User: fd %d\n", user_fd);
+
             pthread_mutex_lock(&state->sub_lock);
 
             for (int i = 0; i < state->sub_count; i++)
@@ -148,6 +158,7 @@ void handle_user(int user_fd, ServerState *state)
         }
         else if (strncmp(buf, "exit", 4) == 0)
         {
+            printf("User: fd %d left the server\n", user_fd);
             break;
         }
     }
@@ -184,6 +195,9 @@ void *admin_thread(void *arg)
 {
     ServerState *state = (ServerState *)arg;
     char buf[BUF_SIZE];
+
+    printf("Welcome to youtube creator:\n"
+        "Type 'upload <video title>' to upload your first video :D\n");
 
     while (fgets(buf, BUF_SIZE, stdin))
     {
